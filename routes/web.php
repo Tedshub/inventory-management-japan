@@ -32,4 +32,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/barang/export', [BarangController::class, 'export'])->name('barang.export');
     Route::put('/barang/{barang}', [BarangController::class, 'update']);
     Route::delete('/barang/{barang}', [BarangController::class, 'destroy']);
+    Route::post('/barang/bulk-delete', [BarangController::class, 'bulkDelete'])
+    ->name('barang.bulk-delete')
+    ->middleware('throttle:10,1'); // Maksimal 10 request per menit
 });
