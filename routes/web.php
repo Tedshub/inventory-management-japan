@@ -25,7 +25,7 @@ Route::middleware([
     })->name('dashboard');
 });
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', 'auth'])->group(function () {
     Route::get('/barang', [BarangController::class, 'index'])->name('barang.index');
     Route::post('/barang', [BarangController::class, 'store'])->name('barang.store');
     Route::post('/barang/import', [BarangController::class, 'import'])->name('barang.import');

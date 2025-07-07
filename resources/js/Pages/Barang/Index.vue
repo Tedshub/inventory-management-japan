@@ -33,6 +33,112 @@ const alertType = ref('success')
 const selectedBarang = ref(null)
 const showDropdown = ref(false)
 
+const importForm = useForm({
+  file: null
+})
+
+const importFile = ref(null)
+// Add this function to handle file selection
+function handleFileSelect(event) {
+  const file = event.target.files[0]
+  if (file) {
+    // Validate file type
+    const allowedTypes = ['application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
+    if (!allowedTypes.includes(file.type) && !file.name.match(/\.(xlsx|xls)$/i)) {
+      showAlert.value = true
+      alertMessage.value = 'Please select a valid Excel file (.xlsx or .xls)'
+      alertType.value = 'error'
+      setTimeout(() => {
+        showAlert.value = false
+      }, 3000)
+      return
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      showAlert.value = true
+      alertMessage.value = 'File size must be less than 10MB'
+      alertType.value = 'error'
+      setTimeout(() => {
+        showAlert.value = false
+      }, 3000)
+      return
+    }
+
+    importForm.file = file
+    importFile.value = file
+  }
+}
+
+// Add this function to handle import
+function handleImport() {
+  if (!importForm.file) {
+    showAlert.value = true
+    alertMessage.value = 'Please select a file to import'
+    alertType.value = 'error'
+    setTimeout(() => {
+      showAlert.value = false
+    }, 3000)
+    return
+  }
+
+  // Create FormData to handle file upload properly
+  const formData = new FormData()
+  formData.append('file', importForm.file)
+
+  // Use router.post instead of form.post to avoid CSRF issues
+  router.post('/barang/import', formData, {
+    preserveScroll: true,
+    forceFormData: true,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+    onStart: () => {
+      importForm.processing = true
+    },
+    onSuccess: (response) => {
+      importForm.reset()
+      importFile.value = null
+      importForm.processing = false
+
+      // Reset file input
+      const fileInput = document.querySelector('input[type="file"]')
+      if (fileInput) fileInput.value = ''
+
+      showAlert.value = true
+      alertMessage.value = 'Data berhasil diimport'
+      alertType.value = 'success'
+      setTimeout(() => {
+        showAlert.value = false
+      }, 3000)
+
+      // Reload page to show new data
+      window.location.reload()
+    },
+    onError: (errors) => {
+      importForm.processing = false
+      console.error('Import errors:', errors)
+
+      let errorMessage = 'Import gagal, periksa format file'
+      if (errors.file) {
+        errorMessage = Array.isArray(errors.file) ? errors.file[0] : errors.file
+      } else if (errors.message) {
+        errorMessage = errors.message
+      }
+
+      showAlert.value = true
+      alertMessage.value = errorMessage
+      alertType.value = 'error'
+      setTimeout(() => {
+        showAlert.value = false
+      }, 3000)
+    },
+    onFinish: () => {
+      importForm.processing = false
+    }
+  })
+}
+
 // Bulk delete related states
 const selectedItems = ref([])
 const showBulkDeleteModal = ref(false)
@@ -395,58 +501,83 @@ function clearSelection() {
     </div>
 </div>
 
-    <!-- Action Buttons -->
-    <div class="flex flex-wrap items-center gap-3">
-      <form method="POST" action="/barang/import" enctype="multipart/form-data" class="flex items-center gap-2">
-        <label class="cursor-pointer bg-white border border-gray-200 rounded-lg px-4 py-2 flex items-center gap-2 hover:bg-gray-50 transition-colors">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-          </svg>
-          <span class="text-sm font-medium">Choose File</span>
-          <input type="file" name="file" required class="hidden" />
-        </label>
-        <button type="submit" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors">
-          Import Excel
-        </button>
-      </form>
-      <a href="/barang/export" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors flex items-center gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+    <!-- Ganti bagian Action Buttons dengan kode yang sudah diperbaiki -->
+    <div class="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 w-full">
+    <!-- Fixed Import Section -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-2 w-full sm:w-auto">
+        <label class="cursor-pointer bg-white border border-gray-200 rounded-lg px-4 py-2 flex items-center gap-2 hover:bg-gray-50 transition-colors w-full sm:w-auto">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
         </svg>
-        Export Excel
-      </a>
+        <span class="text-sm font-medium truncate">{{ importFile ? importFile.name : 'ファイルを選択' }}</span>
+        <input type="file" @change="handleFileSelect" accept=".xlsx,.xls" class="hidden" />
+        </label>
 
-      <!-- Bulk Delete Button -->
-      <button
-        v-if="hasSelectedItems"
-        @click="openBulkDeleteModal"
-        class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors flex items-center gap-2"
-      >
+        <button
+        @click="handleImport"
+        :disabled="!importFile || importForm.processing"
+        :class="[
+            'px-4 py-2 rounded-lg text-sm font-medium transition-colors w-full sm:w-auto',
+            importFile && !importForm.processing
+                ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            ]"
+        >
+        <span v-if="importForm.processing">Importing...</span>
+        <span v-else>Excelをインポート</span>
+        </button>
+    </div>
+
+    <!-- Export Excel -->
+    <a href="/barang/export"
+        class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors flex items-center gap-2 w-full sm:w-auto">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        </svg>
+        Excelをエクスポート
+    </a>
+
+    <!-- Download Template -->
+    <a href="/import_template.xlsx" download="import_template.xlsx"
+        class="bg-[#FDE68A] text-gray-800 px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#FCD34D] transition-colors flex items-center gap-2 w-full sm:w-auto">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        </svg>
+        テンプレートをダウンロード
+    </a>
+
+    <!-- Bulk Delete -->
+    <button v-if="hasSelectedItems" @click="openBulkDeleteModal"
+        class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors flex items-center gap-2 w-full sm:w-auto">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
         </svg>
         選択を削除 ({{ selectedItems.length }})
-      </button>
+    </button>
 
-      <!-- Clear Selection Button -->
-      <button
-        v-if="hasSelectedItems"
-        @click="clearSelection"
-        class="bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors flex items-center gap-2"
-      >
+    <!-- Clear Selection -->
+    <button v-if="hasSelectedItems" @click="clearSelection"
+        class="bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors flex items-center gap-2 w-full sm:w-auto">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
         </svg>
         選択を解除
-      </button>
+    </button>
 
-      <button @click="openAddModal" class="ml-auto bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors flex items-center gap-2">
+    <!-- Add Data -->
+    <button @click="openAddModal"
+        class="ml-0 sm:ml-auto bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors flex items-center gap-2 w-full sm:w-auto">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
         </svg>
         データを追加します
-      </button>
+    </button>
     </div>
+
 
     <!-- Tabel Barang -->
     <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">

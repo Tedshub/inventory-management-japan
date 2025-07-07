@@ -12,13 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('barangs', function (Blueprint $table) {
-            $table->id();
-            $table->string('nama');
-            $table->string('satuan');
-            $table->integer('stok_dipesan');
-            $table->integer('stok_tersedia');
-            $table->integer('stok_dibutuhkan');
-            $table->timestamps();
+            $table->id(); // AUTO INCREMENT PRIMARY KEY
+            $table->string('nama'); // kolom wajib
+            $table->string('satuan')->nullable(); // bisa null
+            $table->integer('stok_dipesan')->default(0); // default 0
+            $table->integer('stok_tersedia')->default(0);
+            $table->integer('stok_dibutuhkan')->default(0);
+            $table->timestamps(); // created_at dan updated_at
         });
     }
 
