@@ -2,6 +2,8 @@
 import { ref, onMounted, computed } from 'vue'
 import { useForm, usePage } from '@inertiajs/vue3'
 import { router } from '@inertiajs/vue3'
+
+// Komponen
 import BarangHeader from '@/Components/Barang/Header.vue'
 import BarangStatsCards from '@/Components/Barang/StatsCards.vue'
 import BarangActionButtons from '@/Components/Barang/ActionButtons.vue'
@@ -10,6 +12,7 @@ import BarangAddEditModal from '@/Components/Barang/AddEditModal.vue'
 import BarangBulkDeleteModal from '@/Components/Barang/BulkDeleteModal.vue'
 import BarangAlert from '@/Components/Barang/Alert.vue'
 
+// Props dari server
 const page = usePage()
 const { barangs, flash = {} } = defineProps({
   barangs: Array,
@@ -19,7 +22,7 @@ const { barangs, flash = {} } = defineProps({
   }
 })
 
-// Shared state
+// State & form
 const showModal = ref(false)
 const showAlert = ref(false)
 const alertMessage = ref('')
@@ -27,11 +30,10 @@ const alertType = ref('success')
 const selectedBarang = ref(null)
 const editMode = ref(false)
 const selectedItems = ref([])
-const isSelectAll = ref(false)
+const isSelectAll = computed(() => selectedItems.value.length === barangs.length)
 const showBulkDeleteModal = ref(false)
 const importFile = ref(null)
 
-// Forms
 const form = useForm({
   nama: '',
   kategori: '',
@@ -45,11 +47,19 @@ const importForm = useForm({
   file: null
 })
 
-// Computed properties
+// Computed
 const userName = computed(() => page.props.auth?.user?.name || 'User')
 const hasSelectedItems = computed(() => selectedItems.value.length > 0)
 
-// Methods
+// Alert helper
+function showAlertMessage(message, type = 'success') {
+  alertMessage.value = message
+  alertType.value = type
+  showAlert.value = true
+  setTimeout(() => showAlert.value = false, 3000)
+}
+
+// File import
 function handleFileSelect(event) {
   const file = event.target.files[0]
   if (file) {
@@ -67,15 +77,6 @@ function handleFileSelect(event) {
     importForm.file = file
     importFile.value = file
   }
-}
-
-function showAlertMessage(message, type = 'success') {
-  alertMessage.value = message
-  alertType.value = type
-  showAlert.value = true
-  setTimeout(() => {
-    showAlert.value = false
-  }, 3000)
 }
 
 function handleImport() {
@@ -104,29 +105,23 @@ function handleImport() {
   })
 }
 
+// Tambah/Edit Barang
 function submit() {
-  if (editMode.value) {
-    form.put(`/barang/${selectedBarang.value.id}`, {
-      preserveScroll: true,
-      onSuccess: () => {
-        showModal.value = false
-        localStorage.setItem('inventoryMessage', 'Data barang berhasil diperbarui')
-        localStorage.setItem('inventoryMessageType', 'success')
-        window.location.reload()
-      }
-    })
-  } else {
-    form.post('/barang', {
-      preserveScroll: true,
-      onSuccess: () => {
-        localStorage.setItem('inventoryMessage', 'Data barang berhasil ditambahkan')
-        localStorage.setItem('inventoryMessageType', 'success')
-        window.location.reload()
-      }
-    })
-  }
+  const action = editMode.value
+    ? form.put(`/barang/${selectedBarang.value.id}`)
+    : form.post('/barang')
+
+  action.then(() => {
+    showModal.value = false
+    localStorage.setItem('inventoryMessage', editMode.value
+      ? 'Data barang berhasil diperbarui'
+      : 'Data barang berhasil ditambahkan')
+    localStorage.setItem('inventoryMessageType', 'success')
+    window.location.reload()
+  })
 }
 
+// Modal tambah barang
 function openAddModal() {
   form.reset()
   editMode.value = false
@@ -134,18 +129,22 @@ function openAddModal() {
   showModal.value = true
 }
 
+// Edit barang
 function editBarang(barang) {
-  form.nama = barang.nama
-  form.kategori = barang.kategori
-  form.stok_dipesan = barang.stok_dipesan
-  form.stok_tersedia = barang.stok_tersedia
-  form.stok_dibutuhkan = barang.stok_dibutuhkan
-  form.satuan = barang.satuan
+  Object.assign(form, {
+    nama: barang.nama,
+    kategori: barang.kategori,
+    stok_dipesan: barang.stok_dipesan,
+    stok_tersedia: barang.stok_tersedia,
+    stok_dibutuhkan: barang.stok_dibutuhkan,
+    satuan: barang.satuan,
+  })
   selectedBarang.value = barang
   editMode.value = true
   showModal.value = true
 }
 
+// Hapus 1 barang
 function deleteBarang(id) {
   if (confirm('Yakin hapus barang ini?')) {
     form.delete(`/barang/${id}`, {
@@ -159,14 +158,16 @@ function deleteBarang(id) {
   }
 }
 
+// Check All
 function toggleSelectAll() {
   if (isSelectAll.value) {
-    selectedItems.value = barangs.map(barang => barang.id)
-  } else {
     selectedItems.value = []
+  } else {
+    selectedItems.value = barangs.map(barang => barang.id)
   }
 }
 
+// Per item
 function toggleItemSelection(itemId) {
   const index = selectedItems.value.indexOf(itemId)
   if (index > -1) {
@@ -174,9 +175,9 @@ function toggleItemSelection(itemId) {
   } else {
     selectedItems.value.push(itemId)
   }
-  isSelectAll.value = selectedItems.value.length === barangs.length
 }
 
+// Hapus banyak
 function openBulkDeleteModal() {
   if (selectedItems.value.length === 0) {
     showAlertMessage('Pilih minimal satu item untuk dihapus', 'error')
@@ -186,17 +187,14 @@ function openBulkDeleteModal() {
 }
 
 function confirmBulkDelete() {
-  const bulkDeleteForm = useForm({
-    ids: selectedItems.value
-  })
+  const bulkDeleteForm = useForm({ ids: selectedItems.value })
 
   bulkDeleteForm.post('/barang/bulk-delete', {
     preserveScroll: true,
     onSuccess: () => {
       selectedItems.value = []
-      isSelectAll.value = false
       showBulkDeleteModal.value = false
-      localStorage.setItem('inventoryMessage', `${selectedItems.value.length} data barang berhasil dihapus`)
+      localStorage.setItem('inventoryMessage', `${bulkDeleteForm.ids.length} data barang berhasil dihapus`)
       localStorage.setItem('inventoryMessageType', 'success')
       window.location.reload()
     }
@@ -209,17 +207,12 @@ function cancelBulkDelete() {
 
 function clearSelection() {
   selectedItems.value = []
-  isSelectAll.value = false
 }
 
 onMounted(() => {
-  if (flash?.success) {
-    showAlertMessage(flash.success)
-  }
-
+  if (flash?.success) showAlertMessage(flash.success)
   const storedMessage = localStorage.getItem('inventoryMessage')
   const storedType = localStorage.getItem('inventoryMessageType')
-
   if (storedMessage) {
     showAlertMessage(storedMessage, storedType || 'success')
     localStorage.removeItem('inventoryMessage')

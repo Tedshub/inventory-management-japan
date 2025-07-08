@@ -54,6 +54,7 @@ defineEmits([
       :pagination-options="{ enabled: true, perPage: 5, perPageDropdown: [5, 10, 20] }"
       styleClass="vgt-table striped"
     >
+      <!-- Header checkbox -->
       <template #table-column="props">
         <span v-if="props.column.field === 'checkbox'">
           <input
@@ -66,6 +67,7 @@ defineEmits([
         <span v-else>{{ props.column.label }}</span>
       </template>
 
+      <!-- Rows -->
       <template #table-row="props">
         <td v-if="props.column.field === 'checkbox'" class="text-center">
           <input
@@ -75,20 +77,34 @@ defineEmits([
             class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
           />
         </td>
-        <td v-if="props.column.field === 'index'" class="text-gray-500">
+
+        <td v-else-if="props.column.field === 'index'" class="text-center text-gray-500">
           {{ props.row.index }}
         </td>
-        <td v-if="props.column.field === 'actions'" class="flex gap-2 justify-end">
-          <button @click="$emit('edit', props.row)" class="text-yellow-600 hover:text-yellow-800 transition-colors p-2 rounded-full hover:bg-yellow-50">
+
+        <td v-else-if="props.column.field === 'actions'" class="flex gap-2 justify-end">
+          <button
+            @click="$emit('edit', props.row)"
+            class="text-yellow-600 hover:text-yellow-800 transition-colors p-2 rounded-full hover:bg-yellow-50"
+          >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
             </svg>
           </button>
-          <button @click="$emit('delete', props.row.id)" class="text-red-600 hover:text-red-800 transition-colors p-2 rounded-full hover:bg-red-50">
+          <button
+            @click="$emit('delete', props.row.id)"
+            class="text-red-600 hover:text-red-800 transition-colors p-2 rounded-full hover:bg-red-50"
+          >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
           </button>
+        </td>
+
+        <td v-else>
+          {{ props.formattedRow[props.column.field] }}
         </td>
       </template>
     </VueGoodTable>
@@ -116,5 +132,12 @@ defineEmits([
 }
 .vgt-wrap__footer {
   @apply px-4 py-3 border-t border-gray-200 bg-white;
+}
+
+.vgt-wrap__footer select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: none !important;
 }
 </style>

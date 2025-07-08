@@ -8,7 +8,11 @@ defineEmits(['submit', 'close'])
 </script>
 
 <template>
-  <div class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 px-4 backdrop-blur-sm">
+  <!-- Backdrop dengan efek blur -->
+  <div class="fixed inset-0 bg-black/30 backdrop-blur-md z-40"></div>
+
+  <!-- Modal Container -->
+  <div class="fixed inset-0 flex items-center justify-center z-50 px-4">
     <div class="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden">
       <div class="flex justify-between items-center px-6 py-4 border-b">
         <h2 class="text-lg font-semibold text-gray-900">
@@ -55,24 +59,27 @@ defineEmits(['submit', 'close'])
 </template>
 
 <style scoped>
+/* Backdrop Blur Effect */
 .fixed {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+}
+
+.backdrop-blur-md {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Modal Styling */
+.bg-black\/30 {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.z-40 {
+  z-index: 40;
+}
+
+.z-50 {
   z-index: 50;
-}
-
-.bg-opacity-40 {
-  background-color: rgba(0, 0, 0, 0.4);
-}
-
-.backdrop-blur-sm {
-  backdrop-filter: blur(4px);
 }
 
 .max-w-md {
@@ -81,5 +88,12 @@ defineEmits(['submit', 'close'])
 
 .shadow-2xl {
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* Transition Effects */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
 }
 </style>
