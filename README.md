@@ -1,4 +1,3 @@
-
 <p align="center">
   <a href="https://laravel.com" target="_blank">
     <img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo">
@@ -20,7 +19,14 @@
   </a>
 </p>
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Tedshub/inventory-management-japan/main/public/imj1.png" width="250" alt="Screenshot 1">
+  <img src="https://raw.githubusercontent.com/Tedshub/inventory-management-japan/main/public/imj2.png" width="250" alt="Screenshot 2">
+  <img src="https://raw.githubusercontent.com/Tedshub/inventory-management-japan/main/public/imj3.png" width="250" alt="Screenshot 3">
+</p>
+
 ---
+
 
 # Inventory Management Japan 🇯🇵
 
@@ -83,13 +89,43 @@
 ## 📁 Key Directory Structure
 
 ```
+app/
+├── Http/
+│   └── Controllers/
+│       └── BarangController.php
+├── Models/
+│   └── Barang.php
+├── Imports/
+│   └── BarangImport.php
+├── Exports/
+│   └── BarangExport.php
+
+database/
+└── migrations/
+    └── 2024_01_01_000000_create_barangs_table.php
+
+routes/
+└── web.php
+
 resources/
-  └── js/
-      └── Pages/
-          └── Barang/
-              ├── Index.vue
-              ├── Create.vue
-              └── Edit.vue
+└── js/
+    ├── Pages/
+    │   └── Barang/
+    │       └── Index.vue
+    └── Components/
+        └── Barang/
+            ├── ActionButtons.vue
+            ├── AddEditModal.vue
+            ├── Alert.vue
+            ├── BarangTable.vue
+            ├── BulkDeleteModal.vue
+            ├── Header.vue
+            └── StatsCards.vue
+
+tests/
+└── Feature/
+    └── BulkDeleteBarangTest.php
+
 ```
 
 ## ✅ Roadmap
