@@ -107,17 +107,26 @@ function handleImport() {
 
 // Tambah/Edit Barang
 function submit() {
-  const action = editMode.value
-    ? form.put(`/barang/${selectedBarang.value.id}`)
-    : form.post('/barang')
+  const url = editMode.value
+    ? `/barang/${selectedBarang.value.id}`
+    : '/barang'
 
-  action.then(() => {
-    showModal.value = false
-    localStorage.setItem('inventoryMessage', editMode.value
-      ? 'Data barang berhasil diperbarui'
-      : 'Data barang berhasil ditambahkan')
-    localStorage.setItem('inventoryMessageType', 'success')
-    window.location.reload()
+  const method = editMode.value ? 'put' : 'post'
+
+  form[method](url, {
+    preserveScroll: true,
+    onSuccess: () => {
+      showModal.value = false
+      localStorage.setItem('inventoryMessage', editMode.value
+        ? 'Data barang berhasil diperbarui'
+        : 'Data barang berhasil ditambahkan')
+      localStorage.setItem('inventoryMessageType', 'success')
+      window.location.reload()
+    },
+    onError: () => {
+      showModal.value = false
+      showAlertMessage('Terjadi kesalahan saat menyimpan data', 'error')
+    }
   })
 }
 
